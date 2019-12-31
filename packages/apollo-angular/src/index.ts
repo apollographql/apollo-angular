@@ -5,5 +5,5 @@ export {Mutation} from './Mutation';
 export {Subscription} from './Subscription';
 export {SelectPipe} from './SelectPipe';
 export {ApolloModule} from './ApolloModule';
-export {APOLLO_OPTIONS, APOLLO_NAMED_OPTIONS} from './tokens';
-export {SubscriptionResult} from './types';
+export {APOLLO_OPTIONS, APOLLO_NAMED_OPTIONS, APOLLO_FLAGS} from './tokens';
+export {SubscriptionResult, Flags} from './types';

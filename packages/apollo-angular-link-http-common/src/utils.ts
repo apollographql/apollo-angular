@@ -1,7 +1,7 @@
-import {HttpHeaders, HttpResponse, HttpClient} from '@angular/common/http';
+import {HttpResponse, HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 
-import {Request, Body, ExtractFiles} from './types';
+import {Request, Body, ExtractFiles, Headers} from './types';
 
 export const fetch = (
   req: Request,
@@ -105,22 +105,36 @@ export const fetch = (
   });
 };
 
+function isHttpHeaders(headers: Headers): headers is HttpHeaders {
+  return headers instanceof HttpHeaders;
+}
+
+export function ensureHttpHeaders(headers: Headers): HttpHeaders {
+  return isHttpHeaders(headers) ? headers : new HttpHeaders(headers);
+}
+
 export const mergeHeaders = (
-  source: HttpHeaders,
-  destination: HttpHeaders,
+  source: Headers,
+  destination: Headers,
 ): HttpHeaders => {
   if (source && destination) {
-    const merged = destination
+    const transformed = {
+      destination: ensureHttpHeaders(destination),
+      source: ensureHttpHeaders(source),
+    };
+
+    const merged = transformed.destination
       .keys()
       .reduce(
-        (headers, name) => headers.set(name, destination.getAll(name)),
-        source,
+        (headers, name) =>
+          headers.set(name, transformed.destination.getAll(name)),
+        transformed.source,
       );
 
     return merged;
   }
 
-  return destination || source;
+  return ensureHttpHeaders(destination || source);
 };
 
 export function prioritize<T>(...values: T[]): T {

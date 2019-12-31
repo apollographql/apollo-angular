@@ -1,8 +1,10 @@
 import {HttpHeaders} from '@angular/common/http';
 import {Operation} from 'apollo-link';
 
+export type Headers = HttpHeaders | {[header: string]: string | string[]};
+
 export type HttpRequestOptions = {
-  headers?: HttpHeaders;
+  headers?: Headers;
   withCredentials?: boolean;
   useMultipart?: boolean;
 };

@@ -394,6 +394,53 @@ describe('HttpBatchLink', () => {
     }, 50);
   });
 
+  test('should merge headers from context (Headers) and contructor options (HttpHeaders)', (done: jest.DoneCallback) => {
+    const link = httpLink.create({
+      uri: 'graphql',
+      headers: new HttpHeaders().set('X-Custom-Foo', 'foo'),
+      batchKey: () => 'bachKey',
+    });
+    const op1 = {
+      query: gql`
+        query heroes {
+          heroes {
+            name
+          }
+        }
+      `,
+      context: {
+        headers: {
+          'X-Custom-Bar': 'bar',
+        },
+      },
+    };
+    const op2 = {
+      query: gql`
+        query heroes {
+          heroes {
+            name
+          }
+        }
+      `,
+      context: {
+        headers: new HttpHeaders().set('X-Custom-Baz', 'baz'),
+      },
+    };
+
+    execute(link, op1).subscribe(noop);
+    execute(link, op2).subscribe(noop);
+
+    setTimeout(() => {
+      httpBackend.match(req => {
+        expect(req.headers.get('X-Custom-Foo')).toEqual('foo');
+        expect(req.headers.get('X-Custom-Bar')).toEqual('bar');
+        expect(req.headers.get('X-Custom-Baz')).toEqual('baz');
+        done();
+        return true;
+      });
+    }, 50);
+  });
+
   test('should support dynamic uri based on context.uri', (done: jest.DoneCallback) => {
     const link = httpLink.create({
       uri: 'graphql',

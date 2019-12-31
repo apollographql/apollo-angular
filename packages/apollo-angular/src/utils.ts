@@ -59,3 +59,13 @@ export function wrapWithZone<T>(
 ): Observable<T> {
   return obs.pipe(observeOn(new ZoneScheduler(ngZone)));
 }
+
+export function pickFlag<Flags, K extends keyof Flags>(
+  flags: Flags | undefined,
+  flag: K,
+  defaultValue: Flags[K],
+): Flags[K] {
+  return flags && typeof flags[flag] !== 'undefined'
+    ? flags[flag]
+    : defaultValue;
+}

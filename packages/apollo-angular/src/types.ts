@@ -44,3 +44,17 @@ export interface SubscriptionResult<T> extends ExecutionResult {
 }
 
 export type NamedOptions = Record<string, ApolloClientOptions<any>>;
+
+export type Flags = {
+  /**
+   * Strict mode makes sure ApolloModule is only imported once
+   */
+  strict?: boolean;
+  /**
+   * Observable starts with `{ loading: true }`.
+   * There's a big chance the next major version will enable that by default.
+   *
+   * Disabled by default
+   */
+  useInitialLoading?: boolean;
+};

@@ -359,6 +359,64 @@ describe('HttpLink', () => {
     });
   });
 
+  test('should merge headers from context (Headers) and contructor options (HttpHeaders)', () => {
+    const link = httpLink.create({
+      uri: 'graphql',
+      headers: new HttpHeaders().set('X-Custom-Foo', 'foo'),
+    });
+    const op = {
+      query: gql`
+        query heroes {
+          heroes {
+            name
+          }
+        }
+      `,
+      context: {
+        headers: {
+          'X-Custom-Bar': 'bar',
+        },
+      },
+    };
+
+    execute(link, op).subscribe(noop);
+
+    httpBackend.match(req => {
+      expect(req.headers.get('X-Custom-Foo')).toBe('foo');
+      expect(req.headers.get('X-Custom-Bar')).toBe('bar');
+      return true;
+    });
+  });
+
+  test('should merge headers from context (HttpHeaders) and contructor options (Headers)', () => {
+    const link = httpLink.create({
+      uri: 'graphql',
+      headers: {
+        'X-Custom-Bar': 'bar',
+      },
+    });
+    const op = {
+      query: gql`
+        query heroes {
+          heroes {
+            name
+          }
+        }
+      `,
+      context: {
+        headers: new HttpHeaders().set('X-Custom-Foo', 'foo'),
+      },
+    };
+
+    execute(link, op).subscribe(noop);
+
+    httpBackend.match(req => {
+      expect(req.headers.get('X-Custom-Foo')).toBe('foo');
+      expect(req.headers.get('X-Custom-Bar')).toBe('bar');
+      return true;
+    });
+  });
+
   test('should support dynamic uri based on context.uri', () => {
     const link = httpLink.create({
       uri: 'graphql',

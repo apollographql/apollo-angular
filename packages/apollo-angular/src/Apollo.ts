@@ -17,21 +17,30 @@ import {
   ExtraSubscriptionOptions,
   R,
   NamedOptions,
+  Flags,
 } from './types';
-import {APOLLO_OPTIONS, APOLLO_NAMED_OPTIONS} from './tokens';
-import {fromPromise, wrapWithZone, fixObservable} from './utils';
+import {APOLLO_OPTIONS, APOLLO_NAMED_OPTIONS, APOLLO_FLAGS} from './tokens';
+import {fromPromise, wrapWithZone, fixObservable, pickFlag} from './utils';
 
 export class ApolloBase<TCacheShape = any> {
+  private useInitialLoading: boolean;
+
   constructor(
     protected ngZone: NgZone,
+    protected flags?: Flags,
     protected _client?: ApolloClient<TCacheShape>,
-  ) {}
+  ) {
+    this.useInitialLoading = pickFlag(flags, 'useInitialLoading', false);
+  }
 
   public watchQuery<T, V = R>(options: WatchQueryOptions<V>): QueryRef<T, V> {
     return new QueryRef<T, V>(
-      this.client.watchQuery<T, V>({...options}) as ObservableQuery<T, V>,
+      this.ensureClient.watchQuery<T, V>({...options}) as ObservableQuery<T, V>,
       this.ngZone,
-      options,
+      {
+        useInitialLoading: this.useInitialLoading,
+        ...options,
+      },
     );
   }
 
@@ -39,7 +48,7 @@ export class ApolloBase<TCacheShape = any> {
     options: QueryOptions<V>,
   ): Observable<ApolloQueryResult<T>> {
     return fromPromise<ApolloQueryResult<T>>(() =>
-      this.client.query<T, V>({...options}),
+      this.ensureClient.query<T, V>({...options}),
     );
   }
 
@@ -47,7 +56,7 @@ export class ApolloBase<TCacheShape = any> {
     options: MutationOptions<T, V>,
   ): Observable<FetchResult<T>> {
     return fromPromise<FetchResult<T>>(() =>
-      this.client.mutate<T, V>({...options}),
+      this.ensureClient.mutate<T, V>({...options}),
     );
   }
 
@@ -55,7 +64,9 @@ export class ApolloBase<TCacheShape = any> {
     options: SubscriptionOptions<V>,
     extra?: ExtraSubscriptionOptions,
   ): Observable<FetchResult<T>> {
-    const obs = from(fixObservable(this.client.subscribe<T, V>({...options})));
+    const obs = from(
+      fixObservable(this.ensureClient.subscribe<T, V>({...options})),
+    );
 
     return extra && extra.useZone !== true
       ? obs
@@ -64,6 +75,7 @@ export class ApolloBase<TCacheShape = any> {
 
   /**
    * Get an access to an instance of ApolloClient
+   * @deprecated use `apollo.client` instead
    */
   public getClient() {
     return this._client;
@@ -73,9 +85,27 @@ export class ApolloBase<TCacheShape = any> {
    * Set a new instance of ApolloClient
    * Remember to clean up the store before setting a new client.
    *
+   * @deprecated use `apollo.client = client` instead
    * @param client ApolloClient instance
    */
   public setClient(client: ApolloClient<TCacheShape>) {
+    this.client = client;
+  }
+
+  /**
+   * Get an access to an instance of ApolloClient
+   */
+  public get client(): ApolloClient<TCacheShape> {
+    return this._client;
+  }
+
+  /**
+   * Set a new instance of ApolloClient
+   * Remember to clean up the store before setting a new client.
+   *
+   * @param client ApolloClient instance
+   */
+  public set client(client: ApolloClient<TCacheShape>) {
     if (this._client) {
       throw new Error('Client has been already defined');
     }
@@ -83,14 +113,10 @@ export class ApolloBase<TCacheShape = any> {
     this._client = client;
   }
 
-  private get client(): ApolloClient<TCacheShape> {
-    this.beforeEach();
+  private get ensureClient() {
+    this.checkInstance();
 
     return this._client;
-  }
-
-  private beforeEach(): void {
-    this.checkInstance();
   }
 
   private checkInstance(): void {
@@ -100,7 +126,9 @@ export class ApolloBase<TCacheShape = any> {
   }
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class Apollo extends ApolloBase<any> {
   private map: Map<string, ApolloBase<any>> = new Map<
     string,
@@ -115,8 +143,9 @@ export class Apollo extends ApolloBase<any> {
     @Optional()
     @Inject(APOLLO_NAMED_OPTIONS)
     apolloNamedOptions?: NamedOptions,
+    @Optional() @Inject(APOLLO_FLAGS) flags?: Flags,
   ) {
-    super(_ngZone);
+    super(_ngZone, flags);
 
     if (apolloOptions) {
       this.createDefault(apolloOptions);
@@ -194,7 +223,11 @@ export class Apollo extends ApolloBase<any> {
     }
     this.map.set(
       name,
-      new ApolloBase(this._ngZone, new ApolloClient<TCacheShape>(options)),
+      new ApolloBase(
+        this._ngZone,
+        this.flags,
+        new ApolloClient<TCacheShape>(options),
+      ),
     );
   }
 

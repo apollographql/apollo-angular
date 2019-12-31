@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {
   ApolloLink,
   Observable as LinkObservable,
@@ -14,8 +14,10 @@ import {
   Context,
   Request,
   Options,
+  Headers,
   mergeHeaders,
   prioritize,
+  ensureHttpHeaders,
 } from 'apollo-angular-link-http-common';
 
 import {BatchOptions} from './types';
@@ -133,8 +135,8 @@ export class HttpBatchLinkHandler extends ApolloLink {
     });
   }
 
-  private createHeaders(operations: Operation[]): HttpHeaders {
-    return operations.reduce((headers: HttpHeaders, operation: Operation) => {
+  private createHeaders(operations: Operation[]): Headers {
+    return operations.reduce((headers: Headers, operation: Operation) => {
       return mergeHeaders(headers, operation.getContext().headers);
     }, this.options.headers);
   }
@@ -148,9 +150,9 @@ export class HttpBatchLinkHandler extends ApolloLink {
         .substr(2, 9);
     }
 
+    const httpHeaders = context.headers && ensureHttpHeaders(context.headers);
     const headers =
-      context.headers &&
-      context.headers.keys().map((k: string) => context.headers.get(k));
+      httpHeaders && httpHeaders.keys().map((k: string) => httpHeaders.get(k));
 
     const opts = JSON.stringify({
       includeQuery: context.includeQuery,

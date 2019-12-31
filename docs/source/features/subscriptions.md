@@ -126,16 +126,49 @@ class AppModule {
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
+With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most.
+
+There are two methods
+
+- `subscribe` - use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
+- `subscribeToMore` - use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
+
+## subscribe
+
+The `subscribe` is a method to listen to events emitted by the GraphQL API.
+
+```ts
+const COMMENTS_SUBSCRIPTION = gql`
+    subscription onCommentAdded($repoFullName: String!){
+      commentAdded(repoFullName: $repoFullName){
+        id
+        content
+      }
+    }
+`;
+
+@Component({ ... })
+class CommentsComponent {
+  subscribeToNewComments(params) {
+    this.apollo.subscribe({
+      query: COMMENTS_SUBSCRIPTION,
+      variables: {
+        repoName: params.repoFullName,
+      }
+    }).subscribe(result => {
+      console.log(`There's a new comment available`, result.data.commentAdded)
+    });
+  }
+}
+```
+
+Think of it as `watchQuery` but for GraphQL Subscriptions. You start listening for `commentAdded` events and because it's a regular Observable, you can subscribe to it or combine with your application logic.
+
+It's a bit different than `subscribeToMore` because it doesn't require any GraphQL query.
+
 ## subscribeToMore
 
-With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
-
-- Use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
-- Use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
-
-With `subscribeToMore`, you can easily do the latter.
-
-`subscribeToMore` is a method available on every query in `apollo-angular`. It works just like [`fetchMore`](/features/cache-updates/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
+The `subscribeToMore` is a method available on every query in `apollo-angular`. It works just like [`fetchMore`](/features/cache-updates/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 
