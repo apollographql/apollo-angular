@@ -101,6 +101,70 @@ Take a closer look what we did there:
 
 Apollo's HttpLink requires `HttpClient` so that's why we also used `HttpClientModule` from `@angular/common/http`.
 
+### Named clients
+
+It is possible to have several apollo clients in the application, for example pointing to different endpoints.
+
+In our `app.module.ts` file use `ApolloModule` and `APOLLO_OPTIONS` token to configure Apollo Client:
+
+```ts
+import { HttpClientModule } from "@angular/common/http";
+import { ApolloModule, APOLLO_NAMED_OPTIONS } from "apollo-angular";
+import { HttpLinkModule, HttpLink } from "apollo-angular-link-http";
+import { InMemoryCache } from "apollo-cache-inmemory";
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    ApolloModule,
+    HttpLinkModule
+  ],
+  providers: [{
+    provide: APOLLO_NAMED_OPTIONS, // <-- Different from standard initialization 
+    useFactory: (httpLink: HttpLink) => {
+      return {
+        newClientName: { // <-- this settings will be saved by name: newClientName 
+          cache: new InMemoryCache(),
+          link: httpLink.create({
+            uri: "https://o5x5jzoo7z.sse.codesandbox.io/graphql"
+          })
+        }
+      }
+    },
+    deps: [HttpLink]
+  }],
+})
+export class AppModule {}
+```
+Basic usage
+
+```ts
+import { Injectable } from '@angular/core';
+import { Apollo, ApolloBase } from 'apollo-angular';
+
+@Injectable()
+class ApiService {
+  private apollo: ApolloBase;
+  constructor(private apolloProvider: Apollo) {
+    this.apollo = this.apolloProvider.use('newClientName')
+  }
+  getData():Observable<ApolloQueryResult>{
+  return this.apollo
+      .watchQuery({
+        query: gql`
+          {
+            rates(currency: "USD") {
+              currency
+              rate
+            }
+          }
+        `,
+      });
+  }
+}
+```
+
 ## Links and Cache
 
 Apollo Client has a pluggable network interface layer, which can let you configure how queries are sent over HTTP, or replace the whole network part with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
