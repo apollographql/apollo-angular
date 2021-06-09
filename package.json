@@ -12,7 +12,8 @@
     "ci-only:integration": "./scripts/integration tests"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "bundle-test"
   ],
   "devDependencies": {
     "@angular-devkit/core": "12.0.1",
