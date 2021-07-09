@@ -62,71 +62,7 @@ module.exports = {
         },
       ],
     },
-    footer: {
-      style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} Kamil Kisiela. All rights reserved.`,
-      links: [
-        {
-          title: 'Docs',
-          items: [
-            {
-              label: 'Introduction',
-              to: 'docs',
-            },
-            {
-              label: 'Fetching',
-              to: 'docs/data/queries',
-            },
-            {
-              label: 'Local State',
-              to: 'docs/local-state/management',
-            },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Discord',
-              href: 'https://discord.gg/xud7bH9',
-            },
-            {
-              label: 'Other projects',
-              href: 'https://the-guild.dev/open-source',
-            },
-            {
-              label: 'About us',
-              href: 'https://the-guild.dev',
-            },
-            {
-              label: 'Community Meetings',
-              href: 'https://github.com/the-guild-org/community-meetings',
-            },
-          ],
-        },
-        {
-          title: 'Social',
-          items: [
-            {
-              label: 'Blog',
-              href: 'https://the-guild.dev/blog',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/kamilkisiela/apollo-angular',
-            },
-            {
-              label: 'Twitter',
-              href: 'https://twitter.com/kamilkisiela',
-            },
-            {
-              label: 'LinkedIn',
-              href: 'https://www.linkedin.com/company/the-guild-software',
-            },
-          ],
-        },
-      ],
-    },
+
     googleAnalytics: {
       trackingID: 'UA-125180910-5',
     },
